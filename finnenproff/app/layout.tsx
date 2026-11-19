@@ -1,5 +1,5 @@
-import "./globals.css"; import Link from "next/link"; import {Logo} from "@/components/Logo"; import type {Metadata} from "next";
-export const metadata:Metadata={metadataBase:new URL(process.env.NEXT_PUBLIC_SITE_URL??"https://example.no"),title:{default:"FinnEnProff – Én plass. Alle tjenester.",template:"%s"},description:"Tell us what you need help with and we'll help connect you with a suitable company.",icons:{icon:"/icon.svg"}};
+import {siteUrl} from "@/lib/site"; import "./globals.css"; import Link from "next/link"; import {Logo} from "@/components/Logo"; import type {Metadata} from "next";
+export const metadata:Metadata={metadataBase:new URL(siteUrl()),title:{default:"FinnEnProff – Én plass. Alle tjenester.",template:"%s"},description:"Tell us what you need help with and we'll help connect you with a suitable company.",icons:{icon:"/icon.svg"}};
 const nav=[["/services","All services"],["/for-companies","For companies"],["/for-workers","Offer your services"],["/about","About"],["/contact","Contact"],["/login","Sign in"]];
 export default function Root({children}:{children:React.ReactNode}){return(
 <html lang="en"><body>
