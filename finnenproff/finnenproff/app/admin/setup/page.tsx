@@ -1,0 +1,1 @@
+export default function S(){return <div className="mx-auto max-w-xl px-5 py-14"><h1 className="text-2xl font-extrabold">Admin not configured</h1><p className="mt-3 text-muted">Add Supabase keys to .env.local and give your user app_metadata role "admin". See README.</p></div>}

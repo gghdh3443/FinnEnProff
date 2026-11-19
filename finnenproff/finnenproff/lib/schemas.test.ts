@@ -1,0 +1,12 @@
+import {test,expect} from "vitest"; import {requestSchema} from "./schemas";
+const ok={service:"Painting",description:"Paint two bedrooms and a hallway please",postalCode:"7600",city:"Levanger",timing:"week",name:"Ola",email:"a@b.no",phone:"91234567",consentShare:true as const,consentMarketing:false};
+test("valid request",()=>expect(requestSchema.safeParse(ok).success).toBe(true));
+test("requires consent",()=>expect(requestSchema.safeParse({...ok,consentShare:false}).success).toBe(false));
+test("rejects bad postal code",()=>expect(requestSchema.safeParse({...ok,postalCode:"76"}).success).toBe(false));
+import {companySchema,contactSchema} from "./schemas"; import {memLimited} from "./ratelimit"; import {covers,parsePrefixes} from "./coverage"; import {bySlug,slug} from "./services";
+test("company needs 9-digit org number",()=>expect(companySchema.safeParse({name:"AS",orgNumber:"123",contact:"Ola",email:"a@b.no",phone:"91234567",services:["Painting"],coverage:"Trøndelag",description:"We paint houses across the region."}).success).toBe(false));
+test("contact validates",()=>expect(contactSchema.safeParse({name:"Ola",email:"a@b.no",message:"Hello there, a question"}).success).toBe(true));
+test("rate limit trips",()=>{let t=false;for(let i=0;i<7;i++)t=memLimited("k",5);expect(t).toBe(true)});
+test("slugs round-trip",()=>expect(bySlug(slug("End-of-tenancy cleaning"))).toBe("End-of-tenancy cleaning"));
+test("prefix parsing",()=>expect(parsePrefixes("70, 7600; abc 7")).toEqual(["70","7600","7"]));
+test("coverage match",()=>{expect(covers(["76"],"7600")).toBe(true);expect(covers(["70"],"7600")).toBe(false);expect(covers([],"7600")).toBe(false)});

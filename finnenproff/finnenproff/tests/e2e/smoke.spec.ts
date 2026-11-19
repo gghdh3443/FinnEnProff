@@ -1,0 +1,14 @@
+import {test,expect} from "@playwright/test";
+test("home page",async({page})=>{await page.goto("/");await expect(page.getByRole("heading",{name:"What do you need help with?"})).toBeVisible()});
+test("services directory",async({page})=>{await page.goto("/services");await expect(page.getByRole("heading",{name:"Painting"}).or(page.getByText("Painting").first())).toBeVisible()});
+test("request form validates the first step",async({page})=>{await page.goto("/request");await page.getByRole("button",{name:"Continue"}).click();await expect(page.getByRole("alert")).toContainText("Choose a service")});
+test("request form reaches the consent step",async({page})=>{await page.goto("/request?service=Painting");const next=()=>page.getByRole("button",{name:"Continue"}).click();
+ await next();await page.getByLabel("Describe the job").fill("Paint two bedrooms and the hallway, walls only.");await next();
+ await page.getByLabel("Postal code").fill("7600");await page.getByLabel("City").fill("Levanger");await next();
+ await page.getByLabel("When do you need help?").selectOption("week");await next();
+ await page.getByLabel("Name").fill("Test Person");await page.getByLabel("Email").fill("test@example.no");await page.getByLabel("Phone number").fill("91234567");await next();
+ await expect(page.getByText("I agree that FinnEnProff may share")).toBeVisible()});
+test("company registration validates",async({page})=>{await page.goto("/for-companies");await page.getByRole("button",{name:"Submit registration"}).click();await expect(page.getByRole("alert").first()).toBeVisible()});
+test("worker registration page",async({page})=>{await page.goto("/for-workers");await expect(page.getByLabel("Your full name")).toBeVisible()});
+test("unknown page gives 404",async({page})=>{const r=await page.goto("/does-not-exist");expect(r?.status()).toBe(404)});
+test("admin is not reachable when signed out",async({page})=>{await page.goto("/admin");await expect(page.getByText("Customer requests")).toHaveCount(0);await expect(page.getByRole("heading",{name:"Requests"})).toHaveCount(0)});

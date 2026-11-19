@@ -1,0 +1,8 @@
+@tailwind base;@tailwind components;@tailwind utilities;
+body{@apply bg-paper text-ink font-sans antialiased}
+:focus-visible{outline:3px solid #16A36A;outline-offset:2px}
+.btn{@apply inline-flex items-center justify-center rounded-md bg-green px-5 py-3 font-semibold text-white hover:bg-[#12895a] disabled:opacity-50}
+.input{@apply w-full rounded-md border border-line bg-white px-3 py-3 text-base}
+.label{@apply mb-1 block text-sm font-semibold}
+.err{@apply mt-1 text-sm text-red-700}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}

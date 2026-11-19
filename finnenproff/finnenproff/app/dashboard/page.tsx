@@ -1,0 +1,23 @@
+import {adminClient} from "@/lib/supabase"; import {requireCompany} from "@/lib/auth"; import {respond,updateProfile} from "./actions";
+export const dynamic="force-dynamic"; export const metadata={title:"Company dashboard",robots:{index:false}};
+export default async function Dash(){
+ const {user,companyId}=await requireCompany(); const db=adminClient();
+ const [{data:co},{data:reqs},{data:inv}]=await Promise.all([db.from("companies").select("name,status,phone,coverage,description,services,price_per_request_nok").eq("id",companyId).single(),
+  db.from("requests").select("id,created_at,service,description,postal_code,city,address,timing,company_response,customers(name,email,phone)").eq("company_id",companyId).not("shared_at","is",null).order("created_at",{ascending:false}).limit(100),
+  db.from("invoices").select("id,amount_nok,status,created_at,requests(service)").eq("company_id",companyId).order("created_at",{ascending:false}).limit(100)]);
+ if(!co||co.status!=="active")return <div className="mx-auto max-w-xl px-5 py-16"><h1 className="text-2xl font-extrabold">Account not active</h1><p className="mt-3 text-muted">Your company account is not active. Contact FinnEnProff.</p></div>;
+ const open=(reqs??[]).filter((r:any)=>!r.company_response);const nok=(v:any)=>`NOK ${Number(v).toLocaleString("nb-NO")}`;
+ return <div className="mx-auto max-w-4xl px-5 py-10"><div className="flex items-start justify-between gap-4"><div><h1 className="text-3xl font-extrabold">{co.name}</h1><p className="text-sm text-muted">{user.email}</p></div>
+  <form action="/auth/signout" method="post"><button className="rounded-md border border-line px-4 py-2 font-semibold">Sign out</button></form></div>
+ <h2 className="mt-10 text-xl font-bold">Requests for you {open.length>0&&<span className="ml-2 rounded bg-green px-2 text-sm text-white">{open.length} to answer</span>}</h2>
+ <div className="mt-3 divide-y divide-line rounded-md border border-line bg-white">{!reqs?.length&&<p className="p-4 text-muted">No requests yet. Requests appear here after FinnEnProff sends them to you.</p>}
+ {reqs?.map((r:any)=><div key={r.id} className="p-4"><div className="flex flex-wrap gap-x-4"><span className="font-semibold">{r.service}</span><span className="text-muted">{r.postal_code} {r.city}</span><span className="text-muted">{r.created_at.slice(0,10)}</span>{r.company_response&&<span className="ml-auto rounded bg-paper px-2 text-sm font-semibold">{r.company_response}</span>}</div>
+  <p className="mt-2 whitespace-pre-wrap">{r.description}</p><p className="mt-2 text-sm text-muted">{r.address?r.address+" · ":""}Timing: {r.timing}</p>
+  <p className="mt-1 text-sm">{r.customers?.name} · <a className="underline" href={`mailto:${r.customers?.email}`}>{r.customers?.email}</a> · <a className="underline" href={`tel:${r.customers?.phone}`}>{r.customers?.phone}</a></p>
+  {!r.company_response&&<form action={respond} className="mt-3 flex flex-wrap items-center gap-3"><input type="hidden" name="id" value={r.id}/><button name="decision" value="accepted" className="btn">Accept</button><button name="decision" value="declined" className="rounded-md border border-line px-5 py-3 font-semibold">Decline</button>
+   <span className="text-sm text-muted">{co.price_per_request_nok?`Accepting creates an invoice of ${nok(co.price_per_request_nok)}.`:"Accepting is recorded; FinnEnProff will invoice per your agreement."}</span></form>}</div>)}</div>
+ <h2 className="mt-10 text-xl font-bold">Invoices</h2>
+ <div className="mt-3 divide-y divide-line rounded-md border border-line bg-white">{!inv?.length&&<p className="p-4 text-muted">No invoices yet.</p>}{inv?.map((i:any)=><div key={i.id} className="flex gap-4 p-3 text-sm"><span>{i.requests?.service}</span><span className="text-muted">{i.created_at.slice(0,10)}</span><span className="ml-auto">{nok(i.amount_nok)}</span><span className="rounded bg-paper px-2 font-semibold">{i.status}</span></div>)}</div>
+ <h2 className="mt-10 text-xl font-bold">Company profile</h2><p className="mt-1 text-sm text-muted">Services: {co.services.join(", ")}. To change services or service areas, contact FinnEnProff.</p>
+ <form action={updateProfile} className="mt-3"><label className="label" htmlFor="ph">Phone</label><input id="ph" name="phone" defaultValue={co.phone??""} className="input"/><label className="label mt-3" htmlFor="cv">Coverage</label><input id="cv" name="coverage" defaultValue={co.coverage??""} className="input"/>
+ <label className="label mt-3" htmlFor="ds">Description</label><textarea id="ds" name="description" rows={4} defaultValue={co.description??""} className="input"/><button className="btn mt-4">Save profile</button></form></div>}
